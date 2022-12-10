@@ -51,6 +51,6 @@ def main():
                                     continue
                     #im.save(f"2debug-{region_x}.{region_z}mca:{chunk_x}.{chunk_z}-{i}.png")
                 #im.save(f"2debug-{region_x}.{region_z}mca:{chunk_x}.{chunk_z}-{i}.png")
-        im.show()
+        im.save("result.png")
 if __name__ == "__main__":
     main()
