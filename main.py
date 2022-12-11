@@ -33,7 +33,6 @@ def main():
     parser.add_argument('--center', type = tuple, help = 'Where to center the rendered image (x,y)', default = (200,200))
     args = parser.parse_args()
 
-    print(args.source)
     render = Renderer(args.theta,args.xscale,args.yscale,args.zscale)
 
     with open("colors.json","r") as f:
