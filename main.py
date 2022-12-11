@@ -1,5 +1,4 @@
-from colormap import generate_palette
-from iso_render import project_2d
+from iso_render import Renderer
 import json
 import os
 from os.path import exists
@@ -7,6 +6,7 @@ from PIL import Image
 import anvil
 import numpy as np
 import logging
+import argparse
 
 
 #def write_colormap(directory):
@@ -18,11 +18,29 @@ def main():
         logging.info("No colors.json file found! You can create one and define colors like so: \n \
         {""block id"":  [r,g,b,a], ... } ")
 
+
+    parser = argparse.ArgumentParser()
+    # Main params
+    parser.add_argument('--out', type = str, help = 'Path for completed render.', default = 'output.png')
+    parser.add_argument('--source', type = str, help = 'Path to region files to render (directory)', default = '.')
+    parser.add_argument('--size', type = tuple, help = 'Dimensions of the output image', default = (1000,1000))
+
+    # Renderer params
+    parser.add_argument('--theta', type = float, help = 'Y rotation angle for render')
+    parser.add_argument('--yscale', type = float, help = 'Y scale', default = -1)
+    parser.add_argument('--xscale', type = float, help = 'X scale', default = -1)
+    parser.add_argument('--zscale', type = float, help = 'Z scale', default = -0.5)
+    parser.add_argument('--center', type = tuple, help = 'Where to center the rendered image (x,y)', default = (200,200))
+    args = parser.parse_args()
+
+    print(args.source)
+    render = Renderer(args.theta,args.xscale,args.yscale,args.zscale)
+
     with open("colors.json","r") as f:
         colors = json.load(f)
-        im = Image.new(size = (1000,1000), mode = "RGB")
-
-        region_files = [file for file in os.listdir() if file.endswith(".mca")]
+        im = Image.new(size = args.size, mode = "RGB")
+        print(args.source)
+        region_files = [file for file in os.listdir(path=args.source) if file.endswith(".mca")]
         region_files.sort()
         print(region_files)
         for i, region_file in enumerate(region_files):
@@ -44,13 +62,16 @@ def main():
                                 block = chunk.get_block(x,y,z)
                                 try:
                                     color = tuple(colors[block.id])
-                                    point = project_2d((x+((16*chunk_x)+(32*region_x)),y,z+((16*chunk_z)+(32*region_z))),t=3,center=(100,100)) # Seems to break with angles besides 90deg
+                                    point = render.project_2d((x+((16*chunk_x)+(32*region_x)),y,z+((16*chunk_z)+(32*region_z)))) # Seems to break with angles besides 90deg
                                     im.putpixel(point,color)
                                 except Exception as e:
                                     print(e)
                                     continue
                     #im.save(f"2debug-{region_x}.{region_z}mca:{chunk_x}.{chunk_z}-{i}.png")
                 #im.save(f"2debug-{region_x}.{region_z}mca:{chunk_x}.{chunk_z}-{i}.png")
-        im.save("result.png")
+        try:
+            im.save(args.out)
+        except:
+            im.save(f"{args.out}.png")
 if __name__ == "__main__":
     main()
